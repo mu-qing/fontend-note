@@ -4,71 +4,70 @@
 - 对象类型(1)：`Object`
 
 #### 区别：
-* 基本类型存储的都是值，对象类型存储的是指针（内存地址）
-```
-var a = 1;   分配一块内存#001,存放值为1
-var b = a;   分配一块内存#002,拿到a的值1，然后把1放入内存#002
+* 基本类型存储的都是值，对象类型存储的是内存地址
+```js
+var a = 1;   // 分配一块内存#001,存放值为1
+var b = a;   // 分配一块内存#002,拿到a的值，然后把a的值放入内存#002
 console.log(a);   1
 console.log(b);   1
-两个值互不影响
+// 两个值互不影响
 
-var a = [];    分配一块内存#001,存放值为[]，a代表内存地址
-var b = a;     将a的地址#001赋值给b,此时b的地址也是#001，a和b代表同一个地址
+var a = [];    // 分配一块内存#001,存放值为[]，a代表内存地址#001
+var b = a;     // 将a的地址#001赋值给b,此时b的地址也是#001，a和b代表同一个地址
 a.push(1)
-console.log(a);   [1]
-console.log(b);   [1]
+console.log(a);  // [1]
+console.log(b);   // [1]
 
-同一个地址代表同一个地方，所以会互相影响
+// 同一个地址代表同一个地方，所以会互相影响
 ```
-* 对象作为函数参数时，如果函数的参数是对象(Array, Function, Object)，那么传入的是一个引用。对该变量的操作将会影响到原本的对象。
-```
-function test(person) {
-  person.age = 26 // 这里参数传入的是对象的地址
-  person = {    // 这里重新赋值了，相当于重新分配了地址
-    name: 'yyy',
+* 对象作为函数参数时，那么传入的是一个引用。对该变量的操作将会影响到原本的对象。
+```js
+function test(obj) {
+  obj.age = 20 // 这里参数传入的是对象的地址
+  obj = {    // 这里重新赋值了，相当于重新分配了地址
+    name: 'aaa',
     age: 30
   }
-  return person
+  return obj
 }
-const p1 = {
-  name: 'yck',
-  age: 25
+const obj1 = {
+  name: 'ljy',
+  age: 10
 }
-const p2 = test(p1)
-console.log(p1) // -> {name: 'yck', age: 26 }
-console.log(p2) // -> {name: 'yyy', age: 30 }
+const obj2 = test(obj1)
+console.log(obj1) // -> {name: 'ljy', age: 20 }  被修改
+console.log(obj2) // -> {name: 'aaa', age: 30 }
 ```
 
-##### 解决引用
+#### 如何解决引用
 
-#### 浅拷贝（对象只有一层）
+##### 浅拷贝（对象只有一级）
 
 ```js
+// Object.assign
+//  Object.assign方法用于对象的合并，将源对象的所有可枚举属性，复制到目标对象。
+
+
 let a = {
     age: 1
 }
-let b = Object.assign({}, a)  
-// Object.assign方法用于对象的合并，将源对象（source）的所有可枚举属性，复制到目标对象（target）。
+let b = Object.assign({}, a) 
+
+
 a.age = 2
 console.log(b.age) // 1
 
 
+// es6 扩展运算符 ...
 let a = {
     age: 1
 }
 let b = {...a}
 a.age = 2
 console.log(b.age) // 1
-
-
-let a = []
-let b = ...a
-a.push(2)
-console.log(b)
-
 ```
 
-#### 深拷贝
+##### 深拷贝（对象有多级）
 
 ##### JSON.parse(JSON.stringify(object))
 
@@ -84,31 +83,31 @@ a.jobs.first = 'native'
 console.log(b.jobs.first) // FE
 ```
 
-##### 但是该方法也是有局限性的：
+##### 但是该方法也是有局限性的：如果你的数据中含有以下三种，可以使用 [lodash 的深拷贝函数](https://lodash.com/docs##cloneDeep)。
 
-会忽略 undefined
-会忽略 symbol
-不能序列化函数
-不能解决循环引用的对象
+- 会忽略 undefined
+- 会忽略 symbol
+- 不能序列化函数
+- 不能解决循环引用的对象
 
 ```js
-let a = {
+let obj = {
+    name: 'ljy',
     age: undefined,
-    sex: Symbol('male'),
-    jobs: function() {},
-    name: 'yck'
+    sex: Symbol('a'),
+    say: function() {},
 }
-let b = JSON.parse(JSON.stringify(a))
-console.log(b) // {name: "yck"}
+let b = JSON.parse(JSON.stringify(obj))
+console.log(b) // {name: "ljy"} age，sex，say被忽略
 ```
 
-如果你的数据中含有以上三种情况下，可以使用 [lodash 的深拷贝函数](https://lodash.com/docs##cloneDeep)。
+
 
 ### 检测数据类型 typeof
 
 `typeof` 对于基本类型，除了 `null` 都可以显示正确的类型，对于对象无法区分是哪一种
 
-```
+```js
 typeof 1 // 'number'
 typeof '1' // 'string'
 typeof undefined // 'undefined'
@@ -116,19 +115,19 @@ typeof true // 'boolean'
 typeof Symbol() // 'symbol'
 typeof b // b 没有声明，但是还会显示 undefined
 ```
-```
+```js
 typeof [] // 'object'
 typeof {} // 'object'
 typeof console.log // 'function'
 ```
 对于 `null` 来说，虽然它是基本类型，但是会显示 `object`
-```
+```js
 typeof null // 'object'
 ```
 #### 使用 `instanceof`区分对象
 `instanceof`是通过原型链来判断
 
-```
+```js
 const Person = function() {}
 const p1 = new Person()
 p1 instanceof Person // true
@@ -145,12 +144,12 @@ JS不存在整型，全部按照 IEEE 754 双精度版本（64位）来表示数
 而计算机计算是采用二进制，所以会将十进制先转成2进制计算后再转成十进制，因此计算有时会出现误差，比如：0.2 + 0.1 = 0.30000000000000004
 
 #### NaN 非数值的类型, 不等于自己 ,本身是一个Number类型
-```
+```js
 console.log(NaN == NAN);//false
 console.log(typeof NaN); //'number'
 ```
 #### isNaN()：接受任意参数，试图转换为数值，不能被转换的返回true. 
-```
+```js
 console.log( isNaN(NaN) ); //true
 console.log( isNaN(10) ); //false
 console.log( isNaN(true) ); //false
