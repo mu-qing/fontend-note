@@ -1,0 +1,516 @@
+### JavaScript 中的数据类型
+
+- 基本类型(6)： `null`，`undefined`，`boolean`，`number`，`string`，`symbol`（es6）。
+- 对象类型(1)：`Object`
+
+#### 区别：
+* 基本类型存储的都是值，对象类型存储的是指针（内存地址）
+```
+var a = 1;   分配一块内存#001,存放值为1
+var b = a;   分配一块内存#002,拿到a的值1，然后把1放入内存#002
+console.log(a);   1
+console.log(b);   1
+两个值互不影响
+
+var a = [];    分配一块内存#001,存放值为[]，a代表内存地址
+var b = a;     将a的地址#001赋值给b,此时b的地址也是#001，a和b代表同一个地址
+a.push(1)
+console.log(a);   [1]
+console.log(b);   [1]
+
+同一个地址代表同一个地方，所以会互相影响
+```
+* 对象作为函数参数时，如果函数的参数是对象(Array, Function, Object)，那么传入的是一个引用。对该变量的操作将会影响到原本的对象。
+```
+function test(person) {
+  person.age = 26 // 这里参数传入的是对象的地址
+  person = {    // 这里重新赋值了，相当于重新分配了地址
+    name: 'yyy',
+    age: 30
+  }
+  return person
+}
+const p1 = {
+  name: 'yck',
+  age: 25
+}
+const p2 = test(p1)
+console.log(p1) // -> {name: 'yck', age: 26 }
+console.log(p2) // -> {name: 'yyy', age: 30 }
+```
+
+##### 解决引用
+
+#### 浅拷贝（对象只有一层）
+
+```js
+let a = {
+    age: 1
+}
+let b = Object.assign({}, a)  
+// Object.assign方法用于对象的合并，将源对象（source）的所有可枚举属性，复制到目标对象（target）。
+a.age = 2
+console.log(b.age) // 1
+
+
+let a = {
+    age: 1
+}
+let b = {...a}
+a.age = 2
+console.log(b.age) // 1
+
+
+let a = []
+let b = ...a
+a.push(2)
+console.log(b)
+
+```
+
+#### 深拷贝
+
+##### JSON.parse(JSON.stringify(object))
+
+```js
+let a = {
+    age: 1,
+    jobs: {
+        first: 'FE'
+    }
+}
+let b = JSON.parse(JSON.stringify(a))
+a.jobs.first = 'native'
+console.log(b.jobs.first) // FE
+```
+
+##### 但是该方法也是有局限性的：
+
+会忽略 undefined
+会忽略 symbol
+不能序列化函数
+不能解决循环引用的对象
+
+```js
+let a = {
+    age: undefined,
+    sex: Symbol('male'),
+    jobs: function() {},
+    name: 'yck'
+}
+let b = JSON.parse(JSON.stringify(a))
+console.log(b) // {name: "yck"}
+```
+
+如果你的数据中含有以上三种情况下，可以使用 [lodash 的深拷贝函数](https://lodash.com/docs##cloneDeep)。
+
+### 检测数据类型 typeof
+
+`typeof` 对于基本类型，除了 `null` 都可以显示正确的类型，对于对象无法区分是哪一种
+
+```
+typeof 1 // 'number'
+typeof '1' // 'string'
+typeof undefined // 'undefined'
+typeof true // 'boolean'
+typeof Symbol() // 'symbol'
+typeof b // b 没有声明，但是还会显示 undefined
+```
+```
+typeof [] // 'object'
+typeof {} // 'object'
+typeof console.log // 'function'
+```
+对于 `null` 来说，虽然它是基本类型，但是会显示 `object`
+```
+typeof null // 'object'
+```
+#### 使用 `instanceof`区分对象
+`instanceof`是通过原型链来判断
+
+```
+const Person = function() {}
+const p1 = new Person()
+p1 instanceof Person // true
+
+var str = 'hello world'
+str instanceof String // false
+
+var str1 = new String('hello world')
+str1 instanceof String // true
+
+```
+### Number 类型： 
+JS不存在整型，全部按照 IEEE 754 双精度版本（64位）来表示数字
+而计算机计算是采用二进制，所以会将十进制先转成2进制计算后再转成十进制，因此计算有时会出现误差，比如：0.2 + 0.1 = 0.30000000000000004
+
+#### NaN 非数值的类型, 不等于自己 ,本身是一个Number类型
+```
+console.log(NaN == NAN);//false
+console.log(typeof NaN); //'number'
+```
+#### isNaN()：接受任意参数，试图转换为数值，不能被转换的返回true. 
+```
+console.log( isNaN(NaN) ); //true
+console.log( isNaN(10) ); //false
+console.log( isNaN(true) ); //false
+```
+### 类型转换
+
+在 JS 中类型转换只有三种情况，分别是：
+- 转换为Boolean: `undefined`， `null`， `false`， `NaN`， `''`， `0`， `-0`为false，其他都转为 `true`
+- 转换为数字 
+- 转换为字符串:
+
+#### 对象转原始类型
+对象在转换基本类型的时候，会调用内置的 [[ToPrimitive]] 函数，对于该函数来说，算法逻辑一般来说如下：
+
+如果已经是原始类型了，那就不需要转换了
+- 调用 x.valueOf()，如果转换为基础类型，就返回转换的值
+- 调用 x.toString()，如果转换为基础类型，就返回转换的值
+  如果都没有返回原始类型，就会报错
+  当然你也可以重写 Symbol.toPrimitive ，该方法在转原始类型时调用优先级最高。
+```
+let a = {
+  valueOf() {
+    return 0
+  },
+  toString() {
+    return '1'
+  },
+  [Symbol.toPrimitive]() {
+    return 2
+  }
+}
+1 + a // => 3
+
+```
+#### 转换成数值：Number,parseInt, parseFloat 
+
+##### Number
+
+```js
+Number()：字符串--整数 (可以用于任何类型整体转换）
+Number(true)--1	 // 布尔值
+Number(false)-0
+
+Number(null)--0 // null
+
+Number(' ')---0 // 空字符串
+
+Number([])---0  // 空数组
+Number([ 1,2,3])---NaN // 非空数组
+
+Number([ 12])---12
+
+Number('100')--100	// 字符串
+Number('01000')---1000
+
+转不了的就返回NaN
+Number('hello world')----NaN
+Number(undefined)----NaN
+Number({})---NaN 
+Number(function(){})---NaN
+不能转换含有非数字的东西：Number(100px)--NaN
+
+由于Number()函数在转换字符串比较复杂且不够合理，因此处理整数一般用parseInt()
+```
+##### parseInt （一个一个的转换，如果第一个不是数字就转成NaN，只能转字符串类型，默认10进制）
+
+```js
+// 只能转换字符串
+parseInt('100px')---100
+parseInt('12.2元')--12
+parseInt('10px23')--10
+parseInt('+100px')--100 (忽略+,-,空格,0000)
+parseInt('0100')---100
+parseInt(0100)---64
+parseInt('')--NaN
+
+// parseFloat(只认识第1个小数点)
+parseFloat(12.32元)--12.32
+parseFloat(12.3.2元)--12.3
+// 判断一个数是否为整数
+parseInt(num) == parseFloat(num)
+```
+### 四则运算符
+#### 加法运算符
+- 其中一方为字符串，那么就会把另一方也转换为字符串
+- 如果一方不是字符串或者数字，那么会将它转换为数字或者字符串
+```js
+1 + '1' // '11'
+true + true // 2
+4 + [1,2,3] // "41,2,3"
+// [1,2,3].toString()  "1,2,3" 参见 对象转成基础类型
+```
+另外对于加法还需要注意这个表达式 'a' + + 'b'
+```js
+'a' + + 'b' // -> "aNaN"
+```
+因为 + 'b' 等于 NaN，所以结果为 "aNaN"，你可能也会在一些代码中看到过 + '1' 的形式来快速获取 number 类型。
+
+
+那么对于除了加法的运算符来说，只要其中一方是数字，那么另一方就会被转为数字
+```js
+4 * '3' // 12
+4 * [] // 0
+4 * [1, 2] // NaN
+
+```
+
+### 比较运算符
+如果是对象，就通过 toPrimitive 转换对象
+如果是字符串，就通过 unicode 字符索引来比较
+
+```
+let a = {
+  valueOf() {
+    return 0
+  },
+  toString() {
+    return '1'
+  }
+}
+a > -1 // true
+
+```
+在以上代码中，因为 a 是对象，所以会通过 valueOf 转换为原始类型再比较值。
+
+###  `==` 操作符
+
+1. 首先会判断两者类型是否**相同**。相同的话就是比大小了，类型不相同的话，那么就会进行类型转换
+2. 会先判断是否在对比 `null` 和 `undefined`，是的话就会返回 `true`
+3. 判断两者类型是否为 `string` 和 `number`，是的话就会将字符串转换为 `number`
+4. 判断其中一方是否为 `boolean`，是的话就会把 `boolean` 转为 `number` 再进行判断
+5. 判断其中一方是否为 `object` 且另一方为 `string`、`number` 或者 `symbol`，是的话就会把 `object` 转为原始类型再进行判断
+
+解析一道题目 `[] == ![] // -> true`
+
+```js
+// [] 转成 true，然后取反变成 false
+![] ----false---ToNumber(false)-----0
+ []-----ToPrimitive([]) == 0
+
+0 == 0 // -> true
+```
+
+
+
+#### 内置对象 Object  Array  Boolean Number String  Funtion  RegExp  Error  Math
+Array
+```
+push():在末尾添加1项，并返回新数组的长度
+pop(); 从末尾删除1项，并返回删除的那一项
+shift(); 从前面删除1项，并返回删除的那一项
+unshift(); 从前面增加1项，并返回新数组的长度
+```
+#### 排序
+- reverse():翻转数组项的顺序
+- sort():调用数组的toString()方法，把每个数组转成字符串，然后两两想减，负数顺序不变，正数交换位置，实现了从小到大排序，升序排序。因为是比较的字符串，所以无法得到排好顺序的整数。如果要实现整数排序，可以另外写一个函数，利用返回值。
+```
+function compare(v1,v2){
+  return v2-v1;
+}
+var value = [1,3,4,0,2];
+value.sort(compare)
+```
+### 操作
+- join()   数组--字符串
+- concat():它会复制当前数组并把传入的参数加在后面，生成一个新的数组。不会改变原数组。
+- slice():返回一个数组,两个参数：起始和结束位置，不包括结束项。没有结束项，就到最后，不改变数组本身。
+- [].slice.call(arguments)==Array.slice.call(arguments)，**目的是将arguments对象的数组提出来转化为数组**，arguments本身并不是数组不能调用slice() ，所以可以通过call转成数组
+- splice():会改变数组
+  两个参数，splice(要删除的第一项的位置，要删除的个数)
+  3个参数：起始位置，要删除的个数，要插入的项（可以多个），会从设置的起始位置开始插入
+- indexOf()（从前往后找）和lastIndexOf()（从末尾开始找）查找，找到返回位置，没找到返回-1.    参数：(要查找的项，查找的起始位置。(可选) )
+```
+var num = [1,2,3,4,5];
+num.indexOf(4); //3
+num.lastIndexOf(4); //1
+```
+#### 迭代方法:参数：（运行的函数，作用域（可选））
+- every():对数组的每一项运行给定的函数，若每一项都返回ture,则最终返回true
+- filter():对数组的每一项运行给定的函数，,则最终返回true的项的数组。
+- forEach():对数组的每一项运行给定的函数，无返回值;
+- map():对数组的每一项运行给定的函数，以数组的形式返回所有项的返回值。
+- some():对数组的每一项运行给定的函数，若有一项都返回ture,则最终返回true.
+- 
+#### 缩小方法：
+- reduce():从前到后遍历
+- reduceRight():与上面相反
+  参数：前一个值，当前值，索引，数组    上一次运行的返回值，会作为第一个参数传进去，也就是前一个值
+```
+var num = [1,2,3,4,5];
+var result = num.reduce (function(prev,cur,index,array){return prev+cur;} );  返回的是每项执行结果
+alert(result);//15
+```
+### String
+```
+length：长度
+var str = 'hello ';
+console.log(str.charAt(0)); // h  返回单个字符
+console.log(str.charCodeAt(1));  //101  返回字符编码
+console.log(str[0]);   //h  可直接通过下标
+console.log(str.concat('liujingyi'));//hello liujingyi
+console.log(str.concat('liu',' jing'));//hello liu jing
+console.log(str+'ljy'); //hello ljy
+```
+```
+var str = 'abjcdefj';
+console.log(str.slice(2));      //jcdefj'  开始位置，结束位置  第二个参数默认到最后  
+console.log(str.substring(2));  //jcdefj'  开始位置，结束位置   第二个参数默认到最后
+console.log(str.substr(2));     //jcdefj'  开始位置，返回的字符个数  第二个参数默认到最后
+console.log(str.slice(2,5));    //jcd
+console.log(str.substring(2,5));//jcd
+console.log(str.substr(2,5));   //jcdef
+```
+
+- indexOf()（从前往后找）和lastIndexOf()（从末尾开始找）查找，找到返回位置，没找到返回-1.    参数：(要查找的项，查找的起始位置。(可选) )
+- trim()：删除前后空格
+- toUpperCase() ：转成大写
+- toLowerCase() ：转成小写
+- toLocaleUpperCase()：针对特定地区，转大写、
+- toLocaleLowerCase()：同上，转小写
+- match()：参数1个：字符串或者正则， match()方法就是用来检索一个字符串是否存在。如果存在的话，返回要检索的字符串；如果不存在的话，返回null
+  。
+```
+var text = "cat,bat,sat,fat";
+var result1 = text.match('at');
+var result2 = text.match(/at/);
+console.log(result1); //["at", index: 1, input: "cat,bat,sat,fat"]
+console.log(result2); //["at", index: 1, input: "cat,bat,sat,fat"]
+```
+- search()：参数1个：字符串或者正则，用于检索字符串中指定的子字符串，返回的是子字符串的起始位置，如果没有找到任何匹配的子串，则返回-1。
+ ```
+var text = "cat,bat,sat,fat";
+var result1 = text.search('at');
+var result2 = text.search(/at/);
+alert(result1); //1
+alert(result2); //1
+ ```
+- replace():参数2个：1 正则或字符串（被替换的）  2 函数或字符串（替换后的）
+  如果第一个参数是字符串，那么只有字符串的第一个子字符串会被替换，想要全部替换，第一个参数用正则
+```
+var text = "cat,bat,sat,fat";
+var result = text.replace("at","ond");
+alert(result); //"cond,bat,sat,fat"
+var text = "cat,bat,sat,fat";
+var result = text.replace(/at/g,"ond");
+alert(result); //"cond,bond,sond,fond"
+```
+
+- split():分割字符串，以数组形式返回。参数2个：1 分割符，字符串或正则   2 数组的大小   
+```
+var text = "cat,red,dog";
+var result1 = text.split(',');// ["cat", "red", "dog"]
+var result2 = text.split(); // ["cat,red,dog"]
+var result3 = text.split(',',2); //  ["cat", "red"]
+```
+- localeCompare()：比较字符串在字母表的顺序，相等返回0，如果传入的字符串在前面就返回1，反之返回-1.
+ ```
+var text = "dog";
+var result1 = text.localeCompare('dog');//0
+var result2 = text.localeCompare('cat'); // 1
+fromCharCode():传入编码，返回字符串
+var result1 = String.fromCharCode(104,101,108,108,111); //hello
+substr 参数：截取的起始位置 和长度（如果省略截取到最后）
+var str="Hello world!";
+var n=str.substr(2,3)
+n 输出结果:
+llo
+ ```
+- substring() 方法返回的子串包括 开始 处的字符，但不包括 结束 处的字符。 参数：开始和结束的位置
+  在本例中，我们将使用 substring() 从字符串中提取一些字符：:
+```
+<script>
+
+var str="Hello world!";
+document.write(str.substring(3)+"<br>");
+document.write(str.substring(3,7));
+
+</script>
+以上代码输出结果:
+lo world!
+lo w
+```
+
+Date对象
+```
+var date = new Date();
+var year = date.getFullYear();
+var month = end(date.getMonth()+1);
+var dates = end(date.getDate());
+var hours = end(date.getHours()+1);
+var minutes = end(date.getMinutes()+1);
+var seconds = end(date.getSeconds()+1);
+var dayList=['星期日','星期一','星期三','星期四','星期五','星期六'];
+var day = dayList[date.getDay()];
+
+var time = year+':'+month+':'+dates+':'+hours+':'+minutes+':'+seconds+':'+day;
+console.log(time);
+function end(time){
+  return time<10?'0'+time:time;
+}
+```
+- eval():可以执行字符串形式的JS代码
+  eval("alert(1)");等同与 alert(1);
+
+
+
+### this指向
+
+* 当函数作为对象的方法被调用时，this 指向该对象
+* 当函数作为普通函数调用，this 指向 window 
+* 构造器调用，当用 new 运算符调用函数时，默认情况下，this代表构造函数返回的对象。
+* 当函数嵌套函数时，子函数中的this会指向window对象，如果子函数是箭头函数则不会改变this的指向。
+* call,apply可以动态地改变传入函数的 this
+
+### 原型
+
+
+![](https://user-gold-cdn.xitu.io/2019/3/4/16948562cb2b5031?w=488&h=590&f=png&s=151722)
+
+- 每个函数都有一个 prototype 属性,存放constructor(创建该函数的构造函数) 和 `__proto__`
+- 每个对象都有` __proto__` 属性，指向了创建该对象的构造函数的原型。其实这个属性指向了 [[prototype]]，但是 [[prototype]] 是内部属性，我们并不能访问到，所以使用 `_proto_ `来访问。
+
+- 对象可以通过 `__proto__ `来寻找上一层的属性，`__proto__` 将对象连接起来组成了原型链。
+```
+function Fun() {
+}
+Fun.prototype = {
+   constructor: f Func(),
+    __proto__: Object
+}
+Object.prototype = {
+   constructor: f Object()
+}
+
+var a = new Func()
+a.__proto__ 指向Fun.prototype
+Fun.prototype.__proto__指向Object.prototype
+```
+
+### new
+* 新生成了一个对象
+* 链接到原型
+* 绑定 this
+* 返回新对象
+
+  在调用 new 的过程中会发生以上四件事情，我们也可以试着来自己实现一个 new
+```js
+function create() {
+    // 创建一个空的对象
+    let obj = new Object()
+    // 获得构造函数
+    let Con = [].shift.call(arguments)
+    // 链接到原型
+    obj.__proto__ = Con.prototype
+    // 绑定 this，执行构造函数
+    let result = Con.apply(obj, arguments)
+    // 确保 new 出来的是个对象
+    return typeof result === 'object' ? result : obj
+}
+```
+
+
+
