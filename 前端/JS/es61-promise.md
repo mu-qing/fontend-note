@@ -1,4 +1,5 @@
-##### #### 基本使用
+#### 基本使用
+
 ```javascript
 new Promise(function (resolve, reject) {
         // 假设此处是异步请求某个数据

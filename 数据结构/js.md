@@ -28,20 +28,6 @@ Stack.prototype.pop = function() {
 
 栈【对象】
 
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
 ```
 function Stack() {
     this._size = 0;
@@ -73,20 +59,6 @@ Stack.prototype.pop = function() {
 
 
 栈【链表】
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
 class Node {
@@ -133,18 +105,6 @@ class StackBasedOnLinkedList {
 
 
 基于上面的栈链表，实现的浏览器功能
-
-
-
-
-
-
-
-
-
- 
-
-
 
 
 
@@ -206,29 +166,7 @@ console.log(browser);
 
 
 
-
-
-
-
-
-
-
-
 队列
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
 function Queue() {
@@ -255,49 +193,7 @@ Stack.prototype.dequeue = function(ele) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 队列【对象】
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
 // 先进先出
@@ -338,20 +234,6 @@ Queue.prototype.dequeue = function() {
 
 
 队列【链表】
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
 class Node {
@@ -403,20 +285,6 @@ console.log(newQueue);
 
 
 循环队列
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
 class Node {
@@ -490,20 +358,6 @@ console.log(newCircularQueue)
 
 
 冒泡排序
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
 
 ```
                 var arr = [3, 4, 0, 5];

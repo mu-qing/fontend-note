@@ -1,4 +1,4 @@
-# Event Loop 
+# Event Loop 【非原创】
 
 在前两章节中我们了解了 JS 异步相关的知识。在实践的过程中，你是否遇到过以下场景，为什么 `setTimeout` 会比 `Promise` 后执行，明明代码写在 `Promise` 之前。这其实涉及到了 Event Loop  相关的知识，这一章节我们会来详细地了解 Event Loop  相关知识，知道 JS 异步运行代码的原理，并且这一章节也是面试常考知识点。
 
